@@ -202,9 +202,6 @@ pub struct LicenseInfo {
 * [IPFS](https://docs.ipfs.tech/) or ICP Asset Canisters
 
 ---
+![ChatGPT Image Jun 28, 2025, 08_42_35 PM](https://github.com/user-attachments/assets/786a84f7-466b-4f9d-9e81-a1828c18f0af)
 
-## 📌 Conclusion
 
-This system will serve as a fully decentralized, trustless, and programmable platform for IP asset management. By combining DIP721 NFTs, Rust smart contracts, modular licensing, and blockchain payments, creators and inventors can monetize, protect, and share their ideas securely and globally.
-
-Let’s build the future of Intellectual Property together, on-chain!
