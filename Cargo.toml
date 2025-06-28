@@ -1,0 +1,5 @@
+[workspace]
+members = [
+    "src/ip_market_backend"
+]
+resolver = "2"
