@@ -1,37 +1,52 @@
 use candid::{CandidType, Principal};
 use serde::{Deserialize, Serialize};
+use ic_stable_structures::storable::Bound;
+use ic_stable_structures::Storable;
+use std::borrow::Cow;
 
+// Enhanced NFT Metadata structure following ERC-721 and ERC-1155 standards
 #[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
 pub struct NFTMetadata {
     pub token_id: String,
+    // Core NFT fields
     pub name: String,
     pub description: String,
-    pub image: String,
+    pub image: String, // URL or IPFS hash
     pub external_url: Option<String>,
-    pub animation_url: Option<String>,
-    pub background_color: Option<String>,
+    
+    // Additional media
+    pub animation_url: Option<String>, // For videos, audio, etc.
+    pub background_color: Option<String>, // Hex color without #
+    
+    // Attributes for rarity and properties
     pub attributes: Vec<NFTAttribute>,
+    
+    // IP-specific metadata
     pub ip_category: String,
     pub ip_type: String,
     pub creator: String,
     pub creation_date: String,
     pub jurisdiction: Option<String>,
     pub license_type: Option<String>,
-    pub file_type: Option<String>,
+    
+    // Technical metadata
+    pub file_type: Option<String>, // image/png, video/mp4, etc.
     pub file_size: Option<u64>,
-    pub resolution: Option<String>,
-    pub duration: Option<u64>,
+    pub resolution: Option<String>, // "1920x1080"
+    pub duration: Option<u64>, // For videos/audio in seconds
+    
+    // Blockchain metadata
     pub minted_date: String,
     pub blockchain: String,
-    pub token_standard: String,
+    pub token_standard: String, // "ERC-721", "ICRC-7", etc.
 }
 
 #[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
 pub struct NFTAttribute {
     pub trait_type: String,
     pub value: AttributeValue,
-    pub display_type: Option<String>,
-    pub max_value: Option<f64>,
+    pub display_type: Option<String>, // "number", "boost_number", "boost_percentage", "date"
+    pub max_value: Option<f64>, // For progress bars
 }
 
 #[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
@@ -41,6 +56,7 @@ pub enum AttributeValue {
     Boolean(bool),
 }
 
+// Data structures
 #[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
 pub struct IntellectualProperty {
     pub id: String,
@@ -54,6 +70,7 @@ pub struct IntellectualProperty {
     pub metadata: IPMetadata,
     pub verification_status: VerificationStatus,
     pub nft_id: Option<String>,
+    // Enhanced fields for NFT creation
     pub image_url: Option<String>,
     pub additional_files: Vec<FileMetadata>,
 }
@@ -64,7 +81,7 @@ pub struct FileMetadata {
     pub file_type: String,
     pub file_size: u64,
     pub file_hash: String,
-    pub file_url: String,
+    pub file_url: String, // IPFS or other storage URL
     pub uploaded_at: u64,
 }
 
@@ -95,6 +112,7 @@ pub struct IPMetadata {
     pub priority_date: Option<u64>,
     pub application_number: Option<String>,
     pub registration_number: Option<String>,
+    // Enhanced metadata
     pub genre: Option<String>,
     pub medium: Option<String>,
     pub dimensions: Option<String>,
@@ -110,6 +128,7 @@ pub enum VerificationStatus {
     UnderReview,
 }
 
+// Enhanced NFT structure
 #[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
 pub struct IPNft {
     pub id: String,
@@ -119,8 +138,10 @@ pub struct IPNft {
     pub creator: Principal,
     pub metadata_uri: String,
     pub minted_at: u64,
-    pub royalty_percentage: u8,
+    pub royalty_percentage: u8, // 0-100
     pub is_transferable: bool,
+    
+    // Enhanced NFT fields
     pub name: String,
     pub description: String,
     pub image: String,
@@ -129,6 +150,8 @@ pub struct IPNft {
     pub total_editions: Option<u32>,
     pub rarity_rank: Option<u32>,
     pub rarity_score: Option<f64>,
+    
+    // Transfer history
     pub transfer_history: Vec<TransferRecord>,
     pub view_count: u64,
     pub favorite_count: u64,
@@ -172,8 +195,8 @@ pub struct MarketplaceListing {
     pub id: String,
     pub nft_id: String,
     pub seller: Principal,
-    pub price: u64,
-    pub currency: String,
+    pub price: u64, // in e8s (ICP smallest unit)
+    pub currency: String, // "ICP" initially
     pub listed_at: u64,
     pub expires_at: Option<u64>,
     pub status: ListingStatus,
@@ -202,7 +225,7 @@ pub enum ListingStatus {
 #[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
 pub struct LicenseTerms {
     pub usage_rights: Vec<String>,
-    pub duration: Option<u64>,
+    pub duration: Option<u64>, // in nanoseconds
     pub territory: Option<String>,
     pub exclusivity: bool,
     pub commercial_use: bool,
@@ -210,6 +233,7 @@ pub struct LicenseTerms {
     pub attribution_required: bool,
 }
 
+// Request types
 #[derive(CandidType, Serialize, Deserialize)]
 pub struct RegisterIPRequest {
     pub title: String,
@@ -247,6 +271,16 @@ pub struct CreateUserRequest {
 }
 
 #[derive(CandidType, Serialize, Deserialize)]
+pub struct UpdateUserRequest {
+    pub username: Option<String>,
+    pub email: Option<String>,
+    pub bio: Option<String>,
+    pub avatar_url: Option<String>,
+    pub banner_url: Option<String>,
+    pub social_links: Option<Vec<SocialLink>>,
+}
+
+#[derive(CandidType, Serialize, Deserialize)]
 pub struct ListNFTRequest {
     pub nft_id: String,
     pub price: u64,
@@ -258,31 +292,13 @@ pub struct ListNFTRequest {
     pub min_bid_increment: Option<u64>,
 }
 
-#[derive(CandidType, Serialize, Deserialize, Debug)]
-pub enum IPMarketplaceError {
-    NotFound,
-    Unauthorized,
-    AlreadyExists,
-    InvalidInput,
-    InsufficientFunds,
-    OperationFailed,
-    NotImplemented,
-    InvalidFileFormat,
-    FileTooLarge,
-    AuctionEnded,
-    BidTooLow,
-    NFTNotTransferable,
-}
-
-pub type Result<T> = std::result::Result<T, IPMarketplaceError>;
-
 #[derive(CandidType, Serialize, Deserialize)]
 pub struct NFTSearchFilters {
     pub collection_name: Option<String>,
     pub min_price: Option<u64>,
     pub max_price: Option<u64>,
     pub creator: Option<Principal>,
-    pub sort_by: Option<String>,
+    pub sort_by: Option<String>, // "price_asc", "price_desc", "newest", "oldest", "rarity"
 }
 
 #[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
@@ -304,4 +320,102 @@ pub struct MarketplaceStats {
     pub active_auctions: u32,
     pub total_volume: u64,
     pub average_sale_price: Option<u64>,
+}
+
+// Error types
+#[derive(CandidType, Serialize, Deserialize, Debug)]
+pub enum IPMarketplaceError {
+    NotFound,
+    Unauthorized,
+    AlreadyExists,
+    InvalidInput,
+    InsufficientFunds,
+    OperationFailed,
+    NotImplemented,
+    InvalidFileFormat,
+    FileTooLarge,
+    AuctionEnded,
+    BidTooLow,
+    NFTNotTransferable,
+}
+
+pub type Result<T> = std::result::Result<T, IPMarketplaceError>;
+
+// Storable implementations
+impl Storable for IntellectualProperty {
+    fn to_bytes(&self) -> Cow<[u8]> {
+        Cow::Owned(candid::encode_one(self).unwrap())
+    }
+
+    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+        candid::decode_one(&bytes).unwrap()
+    }
+
+    const BOUND: Bound = Bound::Unbounded;
+}
+
+impl Storable for IPNft {
+    fn to_bytes(&self) -> Cow<[u8]> {
+        Cow::Owned(candid::encode_one(self).unwrap())
+    }
+
+    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+        candid::decode_one(&bytes).unwrap()
+    }
+
+    const BOUND: Bound = Bound::Unbounded;
+}
+
+impl Storable for UserProfile {
+    fn to_bytes(&self) -> Cow<[u8]> {
+        Cow::Owned(candid::encode_one(self).unwrap())
+    }
+
+    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+        candid::decode_one(&bytes).unwrap_or_else(|_| {
+            // Return a default UserProfile if decoding fails
+            UserProfile {
+                principal: Principal::anonymous(),
+                username: "unknown".to_string(),
+                email: None,
+                bio: None,
+                reputation_score: 0,
+                verified: false,
+                created_at: 0,
+                owned_ips: Vec::new(),
+                owned_nfts: Vec::new(),
+                avatar_url: None,
+                banner_url: None,
+                social_links: Vec::new(),
+                total_sales: 0,
+                total_purchases: 0,
+            }
+        })
+    }
+
+    const BOUND: Bound = Bound::Unbounded;
+}
+
+impl Storable for MarketplaceListing {
+    fn to_bytes(&self) -> Cow<[u8]> {
+        Cow::Owned(candid::encode_one(self).unwrap())
+    }
+
+    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+        candid::decode_one(&bytes).unwrap()
+    }
+
+    const BOUND: Bound = Bound::Unbounded;
+}
+
+impl Storable for NFTMetadata {
+    fn to_bytes(&self) -> Cow<[u8]> {
+        Cow::Owned(candid::encode_one(self).unwrap())
+    }
+
+    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+        candid::decode_one(&bytes).unwrap()
+    }
+
+    const BOUND: Bound = Bound::Unbounded;
 }
