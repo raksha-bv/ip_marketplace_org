@@ -1,15 +1,7 @@
 use sha2::{Digest, Sha256};
-use crate::storage::COUNTER;
 use crate::types::{NFTAttribute, AttributeValue};
 
-pub fn generate_id(prefix: &str) -> String {
-    COUNTER.with(|counter| {
-        let current = *counter.borrow();
-        *counter.borrow_mut() = current + 1;
-        format!("{}_{}", prefix, current)
-    })
-}
-
+// Utility functions
 pub fn generate_hash(data: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(data.as_bytes());
@@ -17,14 +9,18 @@ pub fn generate_hash(data: &str) -> String {
 }
 
 pub fn format_timestamp(timestamp: u64) -> String {
-    format!("{}", timestamp / 1_000_000_000)
+    // Convert nanoseconds to a readable format
+    // This is a simplified version - in production, use proper date formatting
+    format!("{}", timestamp / 1_000_000_000) // Convert to seconds
 }
 
 pub fn validate_image_url(url: &str) -> bool {
+    // Basic validation for image URLs
     url.starts_with("http://") || url.starts_with("https://") || url.starts_with("ipfs://")
 }
 
 pub fn calculate_rarity_score(attributes: &[NFTAttribute]) -> f64 {
+    // Simple rarity calculation - in production, this would be more sophisticated
     let mut score = 0.0;
     for attr in attributes {
         match &attr.value {
