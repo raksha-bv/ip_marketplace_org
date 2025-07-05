@@ -161,3 +161,8 @@ pub fn remove_ip_from_user(user: Principal, ip_id: &str) {
         }
     });
 }
+
+#[query]
+pub fn whoami() -> Principal {
+    ic_cdk::caller()
+}
