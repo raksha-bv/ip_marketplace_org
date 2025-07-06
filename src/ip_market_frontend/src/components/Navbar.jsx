@@ -24,6 +24,12 @@ const Navbar = () => {
               Dashboard
             </Link>
             <Link 
+              to="/mint-nft" 
+              className="text-gray-700 hover:text-blue-600 font-medium transition duration-200"
+            >
+              Mint NFT
+            </Link>
+            <Link 
               to="/register" 
               className="text-gray-700 hover:text-blue-600 font-medium transition duration-200"
             >

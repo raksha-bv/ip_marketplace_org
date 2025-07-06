@@ -13,6 +13,8 @@ import {
 } from "react-router";
 
 import Register from "./pages/Register";
+import MarketPlace from "./pages/MarketPlace";
+import MintNFT from "./pages/MintNFT";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -21,7 +23,8 @@ const router = createBrowserRouter(
       <Route path="/login" element={<Login />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/marketplace" element={<Dashboard />}/>
+      <Route path="/marketplace" element={<MarketPlace />}/>
+      <Route path="/mint-nft" element={<MintNFT />} />
       {/* Add more routes as needed */}
     </Route>
   )
