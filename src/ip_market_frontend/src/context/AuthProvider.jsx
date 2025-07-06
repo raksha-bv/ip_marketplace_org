@@ -47,51 +47,74 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const initAuth = async () => {
-    try {
-      setLoading(true);
-      const client = await AuthClient.create();
-      setAuthClient(client);
+  try {
+    setLoading(true);
+    const client = await AuthClient.create();
+    setAuthClient(client);
 
-      const isAuth = await client.isAuthenticated();
-      if (isAuth) {
-        const identity = client.getIdentity();
-        const principalId = identity.getPrincipal().toString();
-        setPrincipal(principalId);
-        setIsAuthenticated(true);
-        
-        // Create actor with authenticated identity
-        const authenticatedActor = createActor(config.backendCanisterId, {
-          agentOptions: {
-            identity,
-            host: config.icHost,
-          }
-        });
-        setActor(authenticatedActor);
-        
-        // Try to get user profile
+    const isAuth = await client.isAuthenticated();
+    if (isAuth) {
+      const identity = client.getIdentity();
+      const principalId = identity.getPrincipal().toString();
+      setPrincipal(principalId);
+      setIsAuthenticated(true);
+
+      const authenticatedActor = createActor(config.backendCanisterId, {
+        agentOptions: {
+          identity,
+          host: config.icHost,
+        },
+      });
+
+      // ✅ Fetch root key for local development
+      if (config.dfxNetwork === "local") {
         try {
-          const profile = await authenticatedActor.get_my_profile();
-          if (profile.Ok) {
-            setUserProfile(profile.Ok);
-          }
-        } catch (error) {
-          console.log('No user profile found:', error);
+          await authenticatedActor._agent.fetchRootKey();
+          console.log("✅ Fetched root key for authenticated actor (local dev)");
+        } catch (err) {
+          console.warn("❌ Failed to fetch root key:", err);
         }
-      } else {
-        // Create anonymous actor
-        const anonymousActor = createActor(config.backendCanisterId, {
-          agentOptions: {
-            host: config.icHost,
-          }
-        });
-        setActor(anonymousActor);
       }
-    } catch (error) {
-      console.error('Auth initialization failed:', error);
-    } finally {
-      setLoading(false);
+
+      setActor(authenticatedActor);
+
+      // Load profile
+      try {
+        const profile = await authenticatedActor.get_my_profile();
+        if (profile.Ok) {
+          setUserProfile(profile.Ok);
+        }
+      } catch (error) {
+        console.log("No user profile found:", error);
+      }
+
+    } else {
+      // Anonymous user
+      const anonymousActor = createActor(config.backendCanisterId, {
+        agentOptions: {
+          host: config.icHost,
+        },
+      });
+
+      // ✅ Fetch root key for anonymous actor too
+      if (config.dfxNetwork === "local") {
+        try {
+          await anonymousActor._agent.fetchRootKey();
+          console.log("✅ Fetched root key for anonymous actor (local dev)");
+        } catch (err) {
+          console.warn("❌ Failed to fetch root key:", err);
+        }
+      }
+
+      setActor(anonymousActor);
     }
-  };
+  } catch (error) {
+    console.error("Auth initialization failed:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const login = async () => {
     if (!authClient) return;

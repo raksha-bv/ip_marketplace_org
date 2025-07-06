@@ -172,7 +172,7 @@ const IdentityLogin = () => {
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Email (Optional)
+                      Email 
                     </label>
                     <input
                       type="email"
@@ -186,7 +186,7 @@ const IdentityLogin = () => {
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Bio (Optional)
+                      Bio 
                     </label>
                     <textarea
                       name="bio"
@@ -200,7 +200,7 @@ const IdentityLogin = () => {
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Avatar URL (Optional)
+                      Avatar URL
                     </label>
                     <input
                       type="url"
