@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { AuthClient } from '@dfinity/auth-client';
-import { createActor } from '../declarations/ip_market_backend';
+import { createActor } from '../../../declarations/ip_market_backend';
 import { getEnvironmentConfig, validateEnvironment, logEnvironmentConfig } from '../utils/config';
 
 export const AuthContext = createContext({
