@@ -10,6 +10,12 @@ export const useIPService = () => {
     return await actor.get_user_ips(principalObj);
   };
 
+  const getUserNFTs = async () => {
+    if (!principal) throw new Error("Principal is undefined");
+    const principalObj = Principal.fromText(principal);
+    return await actor.get_user_nfts(principalObj);
+  };
+
   const mintNFT = async (payload) => {
     return await actor.mint_ip_nft(payload);
   };
@@ -19,5 +25,5 @@ export const useIPService = () => {
     return await actor.get_nft_metadata(nftId);
   };
 
-  return { getUserIPs, mintNFT };
+  return { getUserIPs, getUserNFTs, mintNFT };
 };

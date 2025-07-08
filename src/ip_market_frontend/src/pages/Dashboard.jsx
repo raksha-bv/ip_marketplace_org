@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthProvider';
-import { Link } from 'react-router';
-import { useLocation } from 'react-router';
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../context/AuthProvider";
+import { useIPService } from "../hooks/useIPService";
+import { Link } from "react-router";
+import { useLocation } from "react-router";
 
 // Helper functions
 const getVariantValue = (variant) => {
-  if (typeof variant === 'object' && variant !== null) {
+  if (typeof variant === "object" && variant !== null) {
     const keys = Object.keys(variant);
     if (keys.length > 0) {
       return keys[0];
@@ -16,7 +17,9 @@ const getVariantValue = (variant) => {
 
 export default function Dashboard() {
   const { isAuthenticated, userProfile, actor, loading } = useAuth();
+  const { getUserNFTs } = useIPService();
   const [userIPs, setUserIPs] = useState([]);
+  const [userNFTs, setUserNFTs] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
   const location = useLocation();
   const [filter, setFilter] = useState("all");
@@ -26,10 +29,14 @@ export default function Dashboard() {
     const fetchUserData = async () => {
       if (isAuthenticated && actor && userProfile) {
         try {
-          const result = await actor.get_user_ips(userProfile.principal);
-          setUserIPs(result);
+          const [ipResult, nftResult] = await Promise.all([
+            actor.get_user_ips(userProfile.principal),
+            getUserNFTs(),
+          ]);
+          setUserIPs(ipResult);
+          setUserNFTs(nftResult);
         } catch (error) {
-          console.error('Error fetching user data:', error);
+          console.error("Error fetching user data:", error);
         }
       }
       setLoadingData(false);
@@ -41,7 +48,7 @@ export default function Dashboard() {
     } else {
       fetchUserData();
     }
-  }, [isAuthenticated, actor, userProfile]);
+  }, [isAuthenticated, actor, userProfile, getUserNFTs]);
 
   if (loading || loadingData) {
     return (
@@ -56,9 +63,16 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="bg-white p-6 rounded shadow">
-          <h2 className="text-xl font-semibold mb-2">Authentication Required</h2>
-          <p className="mb-4 text-gray-600">Please login to access the dashboard.</p>
-          <Link to="/login" className="text-white bg-blue-600 px-4 py-2 rounded hover:bg-blue-700">
+          <h2 className="text-xl font-semibold mb-2">
+            Authentication Required
+          </h2>
+          <p className="mb-4 text-gray-600">
+            Please login to access the dashboard.
+          </p>
+          <Link
+            to="/login"
+            className="text-white bg-blue-600 px-4 py-2 rounded hover:bg-blue-700"
+          >
             Go to Login
           </Link>
         </div>
@@ -71,8 +85,13 @@ export default function Dashboard() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="bg-white p-6 rounded shadow">
           <h2 className="text-xl font-semibold mb-2">Profile Setup Required</h2>
-          <p className="mb-4 text-gray-600">Please complete your profile to continue.</p>
-          <Link to="/login" className="text-white bg-yellow-600 px-4 py-2 rounded hover:bg-yellow-700">
+          <p className="mb-4 text-gray-600">
+            Please complete your profile to continue.
+          </p>
+          <Link
+            to="/login"
+            className="text-white bg-yellow-600 px-4 py-2 rounded hover:bg-yellow-700"
+          >
             Complete Profile
           </Link>
         </div>
@@ -83,19 +102,28 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="mt-2 text-gray-600">Welcome back, {userProfile.username}!</p>
+          <p className="mt-2 text-gray-600">
+            Welcome back, {userProfile.username}!
+          </p>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard label="IP Assets Owned" value={userProfile.owned_ips.length} icon="📄" />
-          <StatCard label="NFTs Owned" value={userProfile.owned_nfts.length} icon="🖼️" />
-          <StatCard label="Reputation Score" value={userProfile.reputation_score} icon="⭐" />
-          <StatCard label="Verification Status" value={userProfile.verified ? "Verified" : "Pending"} icon="✅" />
+          <StatCard label="IP Assets Owned" value={userIPs.length} icon="📄" />
+          <StatCard label="NFTs Owned" value={userNFTs.length} icon="🖼️" />
+          <StatCard
+            label="Reputation Score"
+            value={userProfile.reputation_score}
+            icon="⭐"
+          />
+          <StatCard
+            label="Verification Status"
+            value={userProfile.verified ? "Verified" : "Pending"}
+            icon="✅"
+          />
         </div>
 
         {/* Filters */}
@@ -117,11 +145,17 @@ export default function Dashboard() {
             <h3 className="text-lg font-medium text-gray-900">Quick Actions</h3>
           </div>
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Link to="/register" className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm">
+            <Link
+              to="/register"
+              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm"
+            >
               ➕ Register New IP
             </Link>
-            <Link to="/marketplace" className="border border-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm hover:bg-gray-50">
-              🔍 Browse Marketplace
+            <Link
+              to="/mint"
+              className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 text-sm"
+            >
+              🎨 Mint NFT
             </Link>
           </div>
         </div>
@@ -136,15 +170,20 @@ export default function Dashboard() {
                 {userIPs.map((ip) => (
                   <div key={ip.id} className="border p-4 rounded-lg">
                     <h4 className="font-medium">{ip.title}</h4>
-                    <p className="text-sm text-gray-500 mt-1">{ip.description}</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {ip.description}
+                    </p>
                     <div className="flex justify-between items-center mt-2">
                       <span className="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-800">
                         {getVariantValue(ip.ip_type)}
                       </span>
-                      <span className={`text-xs px-2 py-0.5 rounded ${getVariantValue(ip.verification_status) === "Verified"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-yellow-100 text-yellow-800"
-                      }`}>
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded ${
+                          getVariantValue(ip.verification_status) === "Verified"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}
+                      >
                         {getVariantValue(ip.verification_status)}
                       </span>
                     </div>
@@ -152,26 +191,93 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-500 mb-6">You don't own any IP assets yet.</p>
+              <p className="text-sm text-gray-500 mb-6">
+                You don't own any IP assets yet.
+              </p>
             )
           ) : null}
 
           {filter === "nft" || filter === "all" ? (
-            userProfile.owned_nfts.length > 0 ? (
+            userNFTs.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {userProfile.owned_nfts.map((nft, index) => (
-                  <div
-                    key={index}
-                    className="cursor-pointer border p-4 rounded-lg hover:shadow"
-                    onClick={() => setSelectedNFT(nft)}
-                  >
-                    <h4 className="font-medium text-purple-800">NFT #{index + 1}</h4>
-                    <p className="text-sm text-gray-600 mt-1">Token ID: {nft.token_id || 'N/A'}</p>
-                  </div>
-                ))}
+                {userNFTs.map((nft) => {
+                  // Handle different image URL formats
+                  let displayImageUrl = nft.image;
+
+                  // If it's an IPFS URL, use it as-is
+                  if (
+                    nft.image.includes("ipfs/") ||
+                    nft.image.includes("pinata.cloud")
+                  ) {
+                    displayImageUrl = nft.image;
+                  }
+                  // Handle Unsplash URLs
+                  else if (nft.image.includes("unsplash.com/photos/")) {
+                    const urlParts = nft.image.split("/");
+                    const lastPart = urlParts[urlParts.length - 1];
+                    const photoId = lastPart.split("-").pop();
+                    displayImageUrl = `https://images.unsplash.com/photo-${photoId}?w=400&h=300&fit=crop&auto=format`;
+                  }
+
+                  return (
+                    <div
+                      key={nft.id}
+                      className="cursor-pointer border p-4 rounded-lg hover:shadow-lg transition-shadow"
+                      onClick={() => setSelectedNFT(nft)}
+                    >
+                      <div className="mb-3 relative">
+                        <img
+                          src={displayImageUrl}
+                          alt={nft.name}
+                          className="w-full h-48 object-cover rounded-md"
+                          onError={(e) => {
+                            console.log(
+                              "Image failed to load:",
+                              displayImageUrl
+                            );
+                            e.target.style.display = "none";
+                            e.target.nextElementSibling.style.display = "flex";
+                          }}
+                          onLoad={() => {
+                            console.log(
+                              "Image loaded successfully:",
+                              displayImageUrl
+                            );
+                          }}
+                        />
+                        {/* Fallback placeholder */}
+                        <div
+                          className="w-full h-48 bg-gray-200 rounded-md flex items-center justify-center text-gray-500"
+                          style={{ display: "none" }}
+                        >
+                          🖼️ NFT Image
+                        </div>
+                      </div>
+                      <h4 className="font-medium text-purple-800">
+                        {nft.name}
+                      </h4>
+                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                        {nft.description}
+                      </p>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-xs px-2 py-0.5 rounded bg-purple-100 text-purple-800">
+                          Token #{nft.token_id.toString()}
+                        </span>
+                        <span className="text-xs px-2 py-0.5 rounded bg-green-100 text-green-800">
+                          {nft.royalty_percentage}% royalty
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             ) : (
-              <p className="text-sm text-gray-500">You don’t own any NFTs.</p>
+              <p className="text-sm text-gray-500">
+                You don't own any NFTs yet.{" "}
+                <Link to="/mint" className="text-blue-600 hover:underline">
+                  Create your first NFT
+                </Link>
+              </p>
             )
           ) : null}
         </div>
@@ -186,14 +292,79 @@ export default function Dashboard() {
               >
                 ×
               </button>
-              <h2 className="text-xl font-semibold text-purple-600 mb-2">NFT Details</h2>
-              <p className="text-sm"><strong>Token ID:</strong> {selectedNFT.token_id || "N/A"}</p>
-              <p className="text-sm"><strong>Owner:</strong> {selectedNFT.owner || "You"}</p>
-              {/* You can add more NFT metadata here */}
+              <h2 className="text-xl font-semibold text-purple-600 mb-2">
+                {selectedNFT.name}
+              </h2>
+              <div className="mb-4">
+                {(() => {
+                  let modalImageUrl = selectedNFT.image;
+
+                  // Handle different image URL formats for modal
+                  if (
+                    selectedNFT.image.includes("ipfs/") ||
+                    selectedNFT.image.includes("pinata.cloud")
+                  ) {
+                    modalImageUrl = selectedNFT.image;
+                  } else if (
+                    selectedNFT.image.includes("unsplash.com/photos/")
+                  ) {
+                    const urlParts = selectedNFT.image.split("/");
+                    const lastPart = urlParts[urlParts.length - 1];
+                    const photoId = lastPart.split("-").pop();
+                    modalImageUrl = `https://images.unsplash.com/photo-${photoId}?w=500&h=400&fit=crop&auto=format`;
+                  }
+
+                  return (
+                    <>
+                      <img
+                        src={modalImageUrl}
+                        alt={selectedNFT.name}
+                        className="w-full h-64 object-cover rounded-md"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                          e.target.nextElementSibling.style.display = "flex";
+                        }}
+                      />
+                      <div
+                        className="w-full h-64 bg-gray-200 rounded-md flex items-center justify-center text-gray-500"
+                        style={{ display: "none" }}
+                      >
+                        🖼️ Image not available
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+              <p className="text-sm mb-2">
+                <strong>Description:</strong> {selectedNFT.description}
+              </p>
+              <p className="text-sm mb-2">
+                <strong>Token ID:</strong> {selectedNFT.token_id.toString()}
+              </p>
+              <p className="text-sm mb-2">
+                <strong>Royalty:</strong> {selectedNFT.royalty_percentage}%
+              </p>
+              <p className="text-sm mb-2">
+                <strong>Creator:</strong> {selectedNFT.creator.toString()}
+              </p>
+              <p className="text-sm mb-2">
+                <strong>Transferable:</strong>{" "}
+                {selectedNFT.is_transferable ? "Yes" : "No"}
+              </p>
+              <p className="text-sm text-gray-600">
+                <strong>Image URL:</strong>
+                <a
+                  href={selectedNFT.image}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline ml-1"
+                >
+                  View Original
+                </a>
+              </p>
             </div>
           </div>
         )}
-
       </div>
     </div>
   );
@@ -205,8 +376,8 @@ function StatCard({ label, value, icon }) {
     <div className="bg-white shadow rounded-lg p-5 flex items-center">
       <div className="text-3xl mr-4">{icon}</div>
       <div>
-        <dt className="text-sm text-gray-500">{label}</dt>
-        <dd className="text-lg font-semibold text-gray-900">{value}</dd>
+        <p className="text-sm text-gray-600">{label}</p>
+        <p className="text-2xl font-semibold">{value}</p>
       </div>
     </div>
   );
