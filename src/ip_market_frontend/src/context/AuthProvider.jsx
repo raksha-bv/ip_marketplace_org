@@ -122,35 +122,7 @@ export const AuthProvider = ({ children }) => {
     try {
       setLoading(true);
       
-      // For local development, bypass Internet Identity
-      if (config.dfxNetwork === 'local') {
-        console.log('Using local development mode - bypassing Internet Identity');
-        
-        // Create actor without specific identity for local development
-        const localActor = createActor(config.backendCanisterId, {
-          agentOptions: {
-            host: config.icHost,
-          }
-        });
-        
-        // Fetch root key for local development
-        try {
-          await localActor._agent.fetchRootKey();
-          console.log('Root key fetched successfully for local development');
-        } catch (rootKeyError) {
-          console.warn('Could not fetch root key:', rootKeyError);
-        }
-        
-        setActor(localActor);
-        setIsAuthenticated(true);
-        setPrincipal('local-development-user');
-        
-        console.log('Local development actor created:', localActor);
-        setLoading(false);
-        return;
-      }
-      
-      // For production, use Internet Identity
+      // Use Internet Identity for both local and production
       await authClient.login({
         identityProvider: config.identityProvider,
         onSuccess: async () => {
@@ -173,7 +145,7 @@ export const AuthProvider = ({ children }) => {
             }
           });
           
-          // For local development, we need to fetch the root key manually
+          // Fetch root key for local development
           if (config.dfxNetwork === 'local') {
             try {
               await authenticatedActor._agent.fetchRootKey();

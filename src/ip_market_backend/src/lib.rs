@@ -21,19 +21,22 @@ use candid::Principal;
 #[init]
 fn init() {
     // Initialize the canister
-    // Any initialization logic can go here
+    // The stable structures are automatically initialized
+    ic_cdk::println!("IP Marketplace backend canister initialized");
 }
 
 #[pre_upgrade]
 fn pre_upgrade() {
     // Called before canister upgrade
-    // Save any state that needs to be preserved
+    // With ic-stable-structures, data is automatically persisted
+    ic_cdk::println!("Starting canister upgrade - data will be preserved in stable memory");
 }
 
 #[post_upgrade]
 fn post_upgrade() {
     // Called after canister upgrade
-    // Restore any state that was saved
+    // With ic-stable-structures, data is automatically restored
+    ic_cdk::println!("Canister upgrade completed - data restored from stable memory");
 }
 
 // Export the candid interface
